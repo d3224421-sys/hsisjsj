@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Finder — Roblox Dorking</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --panel:#151b23;
+    --edge:#2a323d;
+    --text:#e6edf3;
+    --dim:#8b949e;
+    --accent:#5ee6a8;
+    --accent-dim:#2c5c47;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Consolas','SF Mono',Monaco,monospace;
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  .eyebrow{
+    color:var(--accent);
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    font-size:22px;
+    margin:0 0 4px;
+    font-weight:600;
+  }
+  .sub{
+    color:var(--dim);
+    font-size:13px;
+    margin-bottom:24px;
+    line-height:1.5;
+  }
+  .row{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  input{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--edge);
+    color:var(--text);
+    padding:12px 14px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:15px;
+  }
+  input:focus{outline:none;border-color:var(--accent);}
+  button.go{
+    background:var(--accent);
+    color:#06120c;
+    border:none;
+    padding:0 18px;
+    border-radius:6px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  button.go:hover{opacity:0.9;}
+  .sites{
+    display:grid;
+    gap:2px;
+    background:var(--edge);
+    border:1px solid var(--edge);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .site{
+    background:var(--panel);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    text-decoration:none;
+    color:var(--text);
+    transition:background 0.15s;
+  }
+  .site:hover{background:#1c2430;}
+  .site-name{
+    font-size:14px;
+    font-weight:600;
+  }
+  .site-domain{
+    color:var(--dim);
+    font-size:11px;
+    margin-top:2px;
+  }
+  .arrow{
+    color:var(--accent);
+    font-size:16px;
+  }
+  .placeholder{
+    text-align:center;
+    color:var(--dim);
+    font-size:13px;
+    padding:40px 20px;
+    border:1px dashed var(--edge);
+    border-radius:8px;
+  }
+  .combo-btn{
+    display:block;
+    width:100%;
+    background:var(--accent-dim);
+    color:var(--accent);
+    border:1px solid var(--accent);
+    padding:12px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    margin-bottom:20px;
+  }
+  .combo-btn:hover{background:var(--accent);color:#06120c;}
+  .note{
+    color:var(--dim);
+    font-size:11px;
+    margin-top:24px;
+    line-height:1.6;
+    border-top:1px solid var(--edge);
+    padding-top:16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">roblox dev utility</div>
+  <h1>Script Finder</h1>
+  <div class="sub">Masukin nama script/project, klik situs yang mau dicek — atau pakai tombol gabungan buat search semua sekaligus lewat Google.</div>
+
+  <div class="row">
+    <input type="text" id="query" placeholder="nama script, misal: RetroOffender" autocomplete="off">
+    <button class="go" onclick="render()">Set</button>
+  </div>
+
+  <button class="combo-btn" id="comboBtn" onclick="openCombo()">🔍 Cari di semua situs sekaligus (Google)</button>
+
+  <div id="results" class="placeholder">Masukin nama script dulu di atas.</div>
+
+  <div class="note">
+    Tombol gabungan pakai Google dork dengan operator OR di semua site sekaligus. Tombol per-situs buka pencarian langsung di situs itu (kalau tersedia) atau via Google site: search.
+  </div>
+</div>
+
+<script>
+const sites = [
+  {name:"GitHub", domain:"github.com", type:"site"},
+  {name:"Pastebin", domain:"pastebin.com", type:"site"},
+  {name:"Pastefy", domain:"pastefy.app", type:"site"},
+  {name:"RobloxScripts.com", domain:"robloxscripts.com", type:"native", url:"https://robloxscripts.com/search?q="},
+  {name:"Roblox DevForum", domain:"devforum.roblox.com", type:"site"},
+  {name:"Guilded", domain:"guilded.gg", type:"site"},
+  {name:"Gist (GitHub)", domain:"gist.github.com", type:"site"},
+];
+
+function currentQuery(){
+  return document.getElementById('query').value.trim();
+}
+
+function render(){
+  const q = currentQuery();
+  const results = document.getElementById('results');
+  if(!q){
+    results.className = 'placeholder';
+    results.innerHTML = 'Masukin nama script dulu di atas.';
+    return;
+  }
+  results.className = 'sites';
+  results.innerHTML = sites.map(s => {
+    let href;
+    if(s.type === 'native'){
+      href = s.url + encodeURIComponent(q);
+    } else {
+      href = `https://www.google.com/search?q=${encodeURIComponent('"'+q+'" site:'+s.domain)}`;
+    }
+    return `<a class="site" href="${href}" target="_blank" rel="noopener">
+      <div>
+        <div class="site-name">${s.name}</div>
+        <div class="site-domain">${s.domain}</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>`;
+  }).join('');
+}
+
+function openCombo(){
+  const q = currentQuery();
+  if(!q){
+    alert('Isi nama script dulu ya.');
+    return;
+  }
+  const siteClause = sites.map(s => `site:${s.domain}`).join(' OR ');
+  const query = `"${q}" (${siteClause})`;
+  window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+}
+
+document.getElementById('query').addEventListener('keydown', e => {
+  if(e.key === 'Enter') render();
+});
+</script>
+</body>
+</html>
